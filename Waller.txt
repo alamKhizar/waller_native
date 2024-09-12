@@ -1,0 +1,84 @@
+npm install react-native-masonry-list
+
+npm install react-native-fs
+
+
+for expo
+npx expo install expo-file-system
+
+npm install react-native-average-color expo-blur
+expo install expo-image-manipulator
+expo install expo-image-manipulator
+expo install expo-color-matrix-image-filters
+
+
+for video handling
+expo install expo-image-picker expo-av
+
+import React, { useState } from 'react';
+import { View, Button, StyleSheet } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { Video } from 'expo-av';
+
+export default function App() {
+  const [videoUri, setVideoUri] = useState(null);
+
+  const pickVideo = async () => {
+    // Request permission to access media library
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      alert('Sorry, we need media library permissions to make this work!');
+      return;
+    }
+
+    // Launch image picker to select a video
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+      allowsEditing: false,
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setVideoUri(result.assets[0].uri);
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <Button title="Pick a video from camera roll" onPress={pickVideo} />
+      {videoUri && (
+        <Video
+          source={{ uri: videoUri }}
+          useNativeControls
+          resizeMode="contain"
+          style={styles.video}
+        />
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  video: {
+    width: '100%',
+    height: 300,
+    marginTop: 20,
+  },
+});
+
+
+
+///////////////////////
+
+{
+changed the flat list syntax
+then i have to send the downloaded url to mongo db to check who uploaded that link with what description?
+then return a res with uname, tags etc
+
+show the name with a pic who uploaded it!
+}
