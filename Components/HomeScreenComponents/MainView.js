@@ -122,7 +122,7 @@ const MainView = () => {
     <View style={styles.container}>
       <View style={styles.refreshContainer}>
         <Button
-          title="Refresh"
+          title="refresh if bug occurs :)"
           onPress={handleRefresh}
           color={AppColor.iconColor}
         />

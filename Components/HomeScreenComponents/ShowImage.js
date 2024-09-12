@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Image, StyleSheet, View, Button, Alert } from "react-native";
 import { useRoute } from "@react-navigation/native";
 import * as FileSystem from "expo-file-system";
 import * as MediaLibrary from "expo-media-library";
+import { BlurView } from 'expo-blur';
 import { AppColor } from "../../assets/Colors/AppColor";
 
 const ShowImage = () => {
@@ -10,6 +11,7 @@ const ShowImage = () => {
   const imageUri = route.params?.item;
   const [count, setCount] = useState(0);
   const [hasPermission, setHasPermission] = useState(null);
+  const [localImageUri, setLocalImageUri] = useState(null);
 
   useEffect(() => {
     const requestPermission = async () => {
@@ -20,61 +22,89 @@ const ShowImage = () => {
     requestPermission();
   }, []);
 
-  const downloadImage = async () => {
-    if (imageUri) {
+  useEffect(() => {
+    const downloadImage = async () => {
+      if (imageUri) {
+        try {
+          const fileName = `image_${count + 1}.jpg`;
+          const fileUri = FileSystem.cacheDirectory + fileName;
+
+          console.log("Downloading File name:", fileName);
+          console.log("Downloading image to:", fileUri);
+
+          const downloadResumable = FileSystem.createDownloadResumable(
+            imageUri,
+            fileUri,
+            {}
+          );
+
+          const { uri } = await downloadResumable.downloadAsync();
+
+          setLocalImageUri(uri); // Set the local image URI for blur background
+        } catch (error) {
+          console.log("Error", `Failed to download image: ${error.message}`);
+          Alert.alert("Error", `Failed to download image: ${error.message}`);
+        }
+      } else {
+        Alert.alert("Error", "No image URL provided");
+      }
+    };
+
+    downloadImage();
+  }, [imageUri, count]);
+
+  const downloadImageToLibrary = async () => {
+    if (localImageUri) {
       if (!hasPermission) {
         Alert.alert("Permission Denied", "Permission to access media library was denied.");
         return;
       }
 
       try {
-        // Create a unique file name based on the current timestamp and original file name
-        const fileName = `image_${count + 1}.jpg`;
-        // Save to the cache directory for simplicity
-        const fileUri = FileSystem.cacheDirectory + fileName;
-
-        console.log("Downloading File name:", fileName);
-        console.log("Downloading image to:", fileUri);
-
-        // Create a download resumable instance
-        const downloadResumable = FileSystem.createDownloadResumable(
-          imageUri,
-          fileUri,
-          {}
-        );
-
-        // Download the image
-        const { uri } = await downloadResumable.downloadAsync();
-
-        Alert.alert("Success", `Image downloaded to ${uri}`);
-
-        // Save to media library
-        const asset = await MediaLibrary.createAssetAsync(uri);
+        const asset = await MediaLibrary.createAssetAsync(localImageUri);
         setCount(count + 1);
+        Alert.alert("Success", "Image downloaded to your library.");
       } catch (error) {
-        console.log("Error", `Failed to download image: ${error.message}`);
-        Alert.alert("Error", `Failed to download image: ${error.message}`);
+        console.log("Error", `Failed to save image to library: ${error.message}`);
+        Alert.alert("Error", `Failed to save image to library: ${error.message}`);
       }
     } else {
-      Alert.alert("Error", "No image URL provided");
+      Alert.alert("Error", "No local image found to save.");
     }
   };
 
   return (
     <View style={styles.container}>
-      <View style={styles.item}>
-        <Image
-          source={{ uri: imageUri }}
-          style={{ width: "100%", height: "100%", borderRadius: 18, marginBottom: 40 }}
-          resizeMode="contain" 
+      {localImageUri && (
+        <BlurView
+          style={StyleSheet.absoluteFill}
+          intensity={80}
+          tint="light"
+        >
+          <Image
+            source={{ uri: localImageUri }}
+            style={StyleSheet.absoluteFill}
+            blurRadius={15} // Adjust blur radius as needed
+            resizeMode="cover"
+          />
+        </BlurView>
+      )}
+
+      <View style={styles.innerContainer}>
+        <View style={styles.imageContainer}>
+          <Image
+            source={{ uri: imageUri }}
+            style={styles.image}
+            resizeMode="contain" 
+          />
+        </View>
+
+        <Button
+          title="Download Image"
+          onPress={downloadImageToLibrary}
+          color={AppColor.btnHighlight} // You can adjust the button color here
         />
       </View>
-
-      <Button
-        title="Download Image"
-        onPress={downloadImage}
-        color={AppColor.btnHighlight} // You can adjust the button color here
-      />
     </View>
   );
 };
@@ -86,13 +116,30 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: AppColor.appColor,
+    // No need for borderRadius as the BlurView handles this
   },
-  item: {
-    width: "70%", // Ensure items fill the container's width
+  innerContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    width: "100%",
+    height: "100%",
+    borderRadius: 20,
+    padding: 20, // Optional: Add padding if needed
+  },
+  imageContainer: {
+    width: "70%",
     height: "70%",
-    borderRadius: 18, // Optional: Rounded corners for the items
+    borderRadius: 25,
     aspectRatio: 1 / 2,
-    marginBottom: 30
+    elevation: 8,
+    marginBottom: 20,
+    overflow: 'hidden', // Ensures image respects border radius
+  },
+  image: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 20,
+    objectFit: "cover",
   },
 });
