@@ -119,4 +119,14 @@ const searchForImageController = async (req, res) => {
 }
 
 
-module.exports = { signupController, loginController, imageHandler,searchForImageController };
+//search images by tags!
+const filterImages = async (req,res) =>
+  {
+    const {tags} = req.params;
+
+    const data = await WallpaperDetails.find({tags});
+
+    return res.status(200).json({message:"Data fetched successfully",data:data});
+  }
+
+module.exports = { signupController, loginController, imageHandler,searchForImageController , filterImages};
