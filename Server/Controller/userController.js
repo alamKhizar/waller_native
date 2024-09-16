@@ -129,4 +129,14 @@ const filterImages = async (req,res) =>
     return res.status(200).json({message:"Data fetched successfully",data:data});
   }
 
+
+  const profileImages = async (req,res) =>
+  {
+    const {userId} = req.params;
+
+    const data = await WallpaperDetails.find({userId});
+
+    return res.status(200).json({message:"Data fetched successfully",data:data});
+  }
+
 module.exports = { signupController, loginController, imageHandler,searchForImageController , filterImages};

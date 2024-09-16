@@ -40,4 +40,8 @@ yarn-error.*
 
 
 #axios
-Axios/
+Axios/AxiosInstance.js
+
+#firebase
+Firebase/
+Firebase/Config.js
