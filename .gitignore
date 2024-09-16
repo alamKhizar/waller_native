@@ -7,6 +7,8 @@ node_modules/
 .expo/
 dist/
 web-build/
+FireBase/
+FireBase/Config.js
 
 # Native
 *.orig.*
@@ -41,7 +43,3 @@ yarn-error.*
 
 #axios
 Axios/AxiosInstance.js
-
-#firebase
-Firebase/
-Firebase/Config.js
